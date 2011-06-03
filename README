@@ -1,0 +1,39 @@
+This is an academic exercise to show how simple a search engine
+can be. The original inspiration for this was Jean Adams' Castilleja
+Programming Think-Tank, which aims to expose new programmers to the
+power of computing. Perhaps this minimal "search engine" can serve
+as a jumping-off point for student projects?
+
+Usage:
+
+1. Construct a forward index:
+
+   $ ./forwardindex.py ./test/ > fi.dat
+
+2. Construct an inverted index:
+
+   $ ./reverseindex.py < fi.dat > ri.dat
+
+3. Run some queries
+
+   $ ./query.py ri.dat
+   fourscore and seven
+   vmware
+   woozle
+   ^D
+
+   fourscore and seven
+
+                                                                             test/a
+   vmware
+
+                                                                      test/subdir/1
+                                                                             test/b
+   woozle
+
+
+
+There is no ranking, nor much life-support for ranking to be found here.
+Again, this is a pedagogical exercise to show how easy it can be to
+construct something that is recognizable as a search engine.
+

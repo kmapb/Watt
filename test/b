@@ -1,0 +1,22 @@
+Ch-ch-changes.
+As some of you know, I'm no longer at VMware. It feels a bit like leaving
+home. VMware took a chance on me as a new college grad way back in 2000,
+and taught me a lot along the way. I will miss my colleagues, many of whom
+are excellent, and will always be proud of what we accomplished together. I
+expect VMware will continue to be successful both technically and as a
+business, and they treated me very well. I did not leave due to a long list
+of complaints; it simply had been nine years, and I had decided it was time
+to try something different.
+
+I've been waiting to update this blog until I had a clear idea of what that
+"something different" was. My long fast in the woods is over: I'm working
+in the search team at facebook, trying to make a whole lot of data
+available to a whole lot of users. You might think that the title of this
+blog is less relevant than it once was; search sounds, initially, like an
+application, pretty high up the abstraction stack from the hardware. This
+is true, but search is also a special application, enormously demanding in
+computational resources. We're pushing the hardware close to its limits in
+several dimensions simultaneously, and some knotty systems issues arise.
+I'm not ready to talk about them in any depth yet, not out of secrecy, but
+ignorance. I'm still learning the ropes here, and any attempt to drop
+science at this point would just be silly.

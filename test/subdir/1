@@ -1,0 +1,112 @@
+Cantrill and Bonwick get all concurrent-y up in there...
+Bryan Cantrill and Jeff Bonwick of Sun Microsystems co-authored an
+excellent position piece on concurrency in the ACM Queue. It's about time
+someone stood up to those short-selling concurrency bears. Take heart,
+young coders! Correct concurrent software does appear out there from time
+to time, no matter what your grad TA tells you!
+
+The section on hard-won lessons from developing concurrent software warmed
+my heart; VMware's virtual machine monitor team has learned the same
+lessons, and I for one can endorse their list wholeheartedly.
+
+With any legit publication like this, the authors struggle to balance
+completeness and concision, and some things did not make the cut. So, don't
+take it as criticism that I would add just one item to their list, that has
+powerfully increased our ability to ship concurrent code (drumroll): lock
+ranks. Huh? Lock ranks! We have imposed an explicit, compiled-in partial
+order on the locks in our system. Acquiring locks out of order causes a
+runtime failure in debug builds. I've seen some engineers regard this
+discipline as a sort of "training wheels" for concurrency, but it has
+benefits even for seasoned vets.
+
+Ranks force developers to think about layering before writing
+synchronization code. Will this subsystem be touching guest memory? Will it
+require synchronous remote execution on other CPUs? Will the user-level
+portion of our software ever need to acquire this lock? Etc.
+This has strangled many a rare deadlock in the crib. I agree with Bryan and
+Jeff that, in practice, a deadlock is not too hard to debug post-mortem;
+however, post-mortem is too late if the core comes from a customer site. A
+rank violation is much, much easier to catch in testing than a deadlock,
+since it only depends on the single-threaded path leading an order
+violation, as opposed to a concurrent race. This performs the magic trick
+of reducing a concurrent QA problem (exercise every lock interleaving) to a
+serial QA problem (cover every path that acquires a lock).
+The same discipline can be applied to other synchronous services in the
+system. For instance, like many other concurrent systems, our VMM has a
+"crosscall" primitive, which lets a caller synchronously run code in a
+remote VCPU. This can lead to lock-like dependency cycles, where, e.g.,
+VCPU 0 holds lock A and crosscalls VCPU 1 which is blocked waiting for A.
+To prevent this, we encorce the rank metaphor for crosscalls, too; a
+crosscall while holding dangerous locks fails just as a misorder lock
+acquisition would.
+
+
+While the rank discipline was initially adopted for deadlock avoidance, the
+structure it imposes on the system is even more valuable. The lock ranks,
+in isolation, provide a succinct description of the system's organization.
+If you take the partial order of the lock ranks, associate them with their
+controlling subsystems, you can construct a "wedding cake" chart of the
+system automatically. I.e., if subsystem A relies on subsystem B, then
+locks protecting A's data will always have lower rank than B's. The top of
+the cake are "pure" clients, which are never entered from other subsystems;
+the tippy-top layer of frosting are the handful of points that we enter the
+VMM from the guest, where we always know that no VMM locks are held. The
+bottom of the cake, corresponding to the highest ranked, "leaf" locks, from
+which no other code is reachable, correspond to the most basic, omnipresent
+life-support facilities: logging, deferring work to a less pressing time,
+panic'ing, etc.
+
+Bryan advertised the article in an excellent (though more in-character)
+blog post. Out here in the wild wild web, Bryan lets the invective against
+transactional memory advocates ("shysters", in his estimation) flow a bit
+more freely. I am not sure the hype surrounding TM is malicious; I suspect
+it is your garden-variety, low-grade academic over-enthusiasm, born partly
+from needing to exaggerate in grant proposals and paper abstracts, and
+partly from honest optimism. Think "microkernels," not "laetril."
+
+Hey, remember microkernels? For about a decade, systems journals were
+dominated by papers that took for granted that microkernels would dominate
+general purpose OS'es. This religious belief that running parts of the
+operating system in separate address spaces would make everything easier
+and better begat all sorts of meaty sub-problems, like doing fast
+synchronous cross-address-space RPC, and building little IDL compilers that
+provide binary compatibility for clients when driver binaries change and
+... so on. I suspect TM will take a similar course, dying not with a bang,
+but a whimper, and ten years hence.
+
+It's interesting to me that, as with microkernels, one of the principle
+reasons TM will fail is the messy, messy reality of peripheral devices. One
+of the claims made by microkernel proponents is that, since microkernel
+drivers are "just user-level processes", they'll survive driver failures.
+And this is almost true, for some definition of "survive." Suppose you're a
+microkernel, and you restart a failed user-level driver; the new driver
+instance has no way of knowing what state the borked-out driver left the
+actual, physical hardware in. Sometimes, a blind reset procedure can safely
+be carried out, but sometimes it can't. Also, the devices being driven are
+DMA masters, so they might very well have done something horrible to the
+kernel even though the buggy driver was "just a user-level app." And if
+there were I/Os in flight at failure time, have they happened, or not?
+Remember, they might not be idempotent... I'm not saying that some
+best-effort way of dealing with many of these problems is impossible, just
+that it's unclear that moving the driver into userspace has helped the
+situation at all.
+
+Similarly, peripherals are a gotcha for TM, because, as Bryan and Jeff
+point out, they're not memory. There will never be a way to make TM
+transactions persist across system calls, unless you find a way to
+untransmit network packets. That means that TM is now and always will be*
+useful only for raw computation: AVL trees, mp3 encoding, sort, and
+whatnot. Those are important facilities, but they're also the sort of thing
+that are coded once, by an expert, and used forever thence from a library,
+so "ease of programming" is not the highest priority. Even if "ease of
+programming mp3 encoders" is your metric, it's unclear that TM is an
+across-the-board win. What happens when you set a debug watchpoint on
+memory that's accessed transactionally? Oh, sorry! Didn't mean to spoil the
+punchline from someone's PhD thesis...
+
+Not so simple anymore, eh?. If you can remember way back to your undergrad
+days, locks probably seemed easy at first, too.
+
+* I'm exhausted with that weasel phrase "current TM implementations";
+* transactions will never, bloody ever span I/Os, and that's the relevant
+* limitation.

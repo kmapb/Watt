@@ -17,8 +17,7 @@ def queryReverseIndex(ri, q):
   return set(reverseIndex[q])
 
 for line in sys.stdin:
-  u = line.decode('utf-8', 'replace')
-  query = tokenize.tokenorm(u)
+  query = tokenize.tokenorm(line)
   if query:
     docs = queryReverseIndex(reverseIndex, query.pop())
     while query:

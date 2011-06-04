@@ -17,7 +17,7 @@ def tokenorm(line):
   token = ''
   # Poor man's accent stripping: normalize to Unicode NFD
   # and strip out values with category Mark (accents))
-  for c in normalize_line(line):
+  for c in normalize_line(line.decode('utf-8', 'replace')):
     cat = unicodedata.category(c)
     if cat.startswith('L') or cat.startswith('N'):
       # Letters and numbers come through.

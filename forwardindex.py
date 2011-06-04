@@ -15,8 +15,7 @@ def indexFile(path):
   f = open(path)
   tokensSeen = set([])
   for line in f:
-    u = line.decode('utf-8', 'replace')
-    tokens = tokenize.tokenorm(u)
+    tokens = tokenize.tokenorm(line)
     for tok in tokens:
       tokensSeen |= set([tok])
   return tokensSeen

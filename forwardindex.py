@@ -20,22 +20,15 @@ def indexFile(path):
       tokensSeen |= set([tok])
   return tokensSeen
 
-def filesInPath(p):
-  # BFS on the provided path to generate all enclosed files
-  frontier = [ p ]
-  while frontier:
-    path = frontier.pop()
-    if os.path.isdir(path):
-      frontier += [ os.path.join(path, p) for p in os.listdir(path) ]
-    else:
-      yield path
-
 forwardIndex = { }
-for path in filesInPath(sys.argv[1]):
-  if not (path.endswith(".zip") or path.endswith(".mp4") or
-    path.endswith(".jpg") or path.endswith(".png") or
-    path.endswith(".mp3")):
-    forwardIndex[path] = indexFile(path)
+
+for root, dirs, files in os.walk(sys.argv[1]):
+  for path in files:
+    if not (path.endswith(".zip") or path.endswith(".mp4") or
+            path.endswith(".jpg") or path.endswith(".png") or
+            path.endswith(".mp3")):
+      fullPath = os.path.join(root, path)
+      forwardIndex[fullPath] = indexFile(fullPath)
 
 pickle.dump(forwardIndex, sys.stdout)
 

@@ -20,6 +20,9 @@ Usage:
    fourscore and seven
    vmware
    woozle
+   fraternité
+   FRATERNITE
+   인간은
    ^D
 
    fourscore and seven
@@ -31,7 +34,15 @@ Usage:
                                                                              test/b
    woozle
 
+   fraternité
 
+                                                                             test/c
+   FRATERNITE
+
+                                                                             test/c
+   인간은
+
+                                                                             test/d
 
 There is no ranking, nor much life-support for ranking to be found here.
 Again, this is a pedagogical exercise to show how easy it can be to
